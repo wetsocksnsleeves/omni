@@ -1,6 +1,7 @@
 "use client";
 import Image from "next/image";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { fetchServerFiles } from "../actions";
 
 interface MediaBayProp {
     files: File[];
@@ -12,7 +13,12 @@ interface MediaControlProp {
     files: File[];
     selection: File[];
     setSelection: (newSelection: File[]) => void;
+    getFiles: () => Promise<File>[];
     className?: string;
+}
+
+interface FileControlProp {
+    getFiles: () => Promise<File>[];
 }
 
 interface File {
@@ -21,12 +27,13 @@ interface File {
     thumbnail?: string;
 }
 
-function FileControl() {
+function FileControl({ getFiles }: FileControlProp) {
     return (
         <div className="fixed z-20 flex gap-5 my-10 bottom-0 left-1/2 -translate-x-1/2 -translate-y-1/2">
             <div
                 className="border border-border rounded-md bg-secondary px-5 py-2 drop-shadow-[0_8px_8px_rgba(0,0,0,.5)]
             hover:brightness-125 active:brightness-80"
+                onClick={() => getFiles()}
             >
                 <label className="select-none text-white">Upload</label>
             </div>
@@ -63,7 +70,7 @@ function MediaBay({ files, selection, setSelection }: MediaBayProp) {
                 return (
                     <div
                         key={key}
-                        className={`group relative rounded-xl aspect-square overflow-hidden 
+                        className={`group relative rounded-xl aspect-square overflow-hidden select-none
                             ${selection.some((selectedFile) => selectedFile.name === file.name) ? "outline-3 outline-blue-500" : ""}`}
                         onClick={() => toggleSelection(file)}
                     >
@@ -85,7 +92,7 @@ function MediaBay({ files, selection, setSelection }: MediaBayProp) {
                             </div>
                         </span>
                         <Image
-                            className="border border-offwhite"
+                            className="object-cover"
                             src={file.path}
                             alt={file.name}
                             fill
@@ -98,7 +105,12 @@ function MediaBay({ files, selection, setSelection }: MediaBayProp) {
     );
 }
 
-function MediaControl({ files, selection, setSelection }: MediaControlProp) {
+function MediaControl({
+    files,
+    selection,
+    setSelection,
+    getFiles,
+}: MediaControlProp) {
     const amount = selection.length;
 
     return (
@@ -121,6 +133,7 @@ function MediaControl({ files, selection, setSelection }: MediaControlProp) {
             <button
                 className={`text-sm md:text-base px-5 py-2 bg-red-600 rounded-md
                         ${amount > 0 ? "cursor-pointer active:brightness-90 hover:brightness-125" : "brightness-50 cursor-not-allowed"}`}
+                onClick={getFiles}
             >
                 <span className="text-white">Delete ({amount})</span>
             </button>
@@ -129,37 +142,43 @@ function MediaControl({ files, selection, setSelection }: MediaControlProp) {
 }
 
 export default function TransferTool() {
-    // Placeholder files
-    const tempFiles: File[] = [
-        { name: "file1", path: "/missing-file.jpg" },
-        { name: "file2", path: "/missing-file.jpg" },
-        { name: "file3", path: "/missing-file.jpg" },
-        { name: "file4", path: "/missing-file.jpg" },
-        { name: "file5", path: "/missing-file.jpg" },
-        { name: "file6", path: "/missing-file.jpg" },
-        { name: "file6", path: "/missing-file.jpg" },
-        { name: "file7", path: "/missing-file.jpg" },
-        { name: "file8", path: "/missing-file.jpg" },
-        { name: "file9", path: "/missing-file.jpg" },
-        { name: "file10", path: "/missing-file.jpg" },
-        { name: "file11", path: "/missing-file.jpg" },
-    ];
+    const [files, setFiles] = useState([]);
+
+    // Fetch server storage
+        // This is passed to child components and they don't need to call it within
+        // useEffect as this function is being called via onClick handlers
+    async function getFiles() {
+        try {
+            const fetchedFiles: File[] = await fetchServerFiles();
+            setFiles(fetchedFiles);
+        } catch (error) {
+            console.error("Error fetching files:", error);
+        }
+    }
+
+    // useEffect hook to escape from client side environment
+    useEffect(() => {
+        getFiles();
+    }, []);
+
+    console.log(files);
 
     const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
 
     return (
         <div className="p-3 w-full">
             <MediaControl
-                files={tempFiles}
+                files={files}
                 selection={selectedFiles}
                 setSelection={setSelectedFiles}
+                getFiles={getFiles}
             />
             <MediaBay
-                files={tempFiles}
+                files={files}
                 selection={selectedFiles}
                 setSelection={setSelectedFiles}
             />
-            <FileControl />
+            <FileControl getFiles={getFiles} />
         </div>
     );
 }
