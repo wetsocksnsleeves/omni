@@ -15,6 +15,7 @@ export default function NavBar() {
         { route: "/transfertool", label: "Transfer Tool" },
         { route: "/mediadownloader", label: "Media Downloader" },
         { route: "/gifmaker", label: "Gif Maker" },
+        { route: "/colorswatch", label: "Color Swatches" },
     ];
 
     const [burger, setBurger] = useState(false);
@@ -30,7 +31,7 @@ export default function NavBar() {
                     </Link>
                 </span>
                 <nav
-                    className={`${burger ? "hidden" : "sm:flex flex-row w-full h-full items-center justify-center gap-5 hidden"}`}
+                    className={`${burger ? "hidden" : "sm:flex flex-row w-full h-full items-center justify-center gap-8 hidden"}`}
                 >
                     {routes.map((item) => (
                         <Link

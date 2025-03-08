@@ -23,11 +23,17 @@ interface File {
 
 function FileControl() {
     return (
-        <div className="absolute z-20 flex gap-5 my-10 bottom-0 left-1/2 -translate-x-1/2 -translate-y-1/2">
-            <div className="border border-border rounded-md bg-secondary px-5 py-2 drop-shadow-lg hover:brightness-125 active:brightness-80">
+        <div className="fixed z-20 flex gap-5 my-10 bottom-0 left-1/2 -translate-x-1/2 -translate-y-1/2">
+            <div
+                className="border border-border rounded-md bg-secondary px-5 py-2 drop-shadow-[0_8px_8px_rgba(0,0,0,.5)]
+            hover:brightness-125 active:brightness-80"
+            >
                 <label className="select-none text-white">Upload</label>
             </div>
-            <div className="border border-border rounded-md bg-secondary px-5 py-2 drop-shadow-lg hover:brightness-125 active:brightness-80">
+            <div
+                className="border border-border rounded-md bg-secondary px-5 py-2 drop-shadow-[0_8px_8px_rgba(0,0,0,.5)]
+                hover:brightness-125 active:brightness-80"
+            >
                 <label className="select-none text-white">Download</label>
             </div>
         </div>
@@ -131,6 +137,12 @@ export default function TransferTool() {
         { name: "file4", path: "/missing-file.jpg" },
         { name: "file5", path: "/missing-file.jpg" },
         { name: "file6", path: "/missing-file.jpg" },
+        { name: "file6", path: "/missing-file.jpg" },
+        { name: "file7", path: "/missing-file.jpg" },
+        { name: "file8", path: "/missing-file.jpg" },
+        { name: "file9", path: "/missing-file.jpg" },
+        { name: "file10", path: "/missing-file.jpg" },
+        { name: "file11", path: "/missing-file.jpg" },
     ];
 
     const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
