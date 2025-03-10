@@ -104,7 +104,20 @@ export async function fetchServerFiles() {
             if (thumbnail === "") {
                 output.push({ name: file, path: `/files/${file}` });
             } else {
-                await generateThumbnail(filesDirectory + "/" + file, thumbnail);
+                try {
+                    fs.access(thumbnail + ".jpg", fs.constants.F_OK);
+                } catch (error) {
+                    if (error.code === "ENOENT") {
+                        console.log("Thumbnail not found. Generating...");
+                        await generateThumbnail(
+                            filesDirectory + "/" + file,
+                            thumbnail,
+                        );
+                    } else {
+                        console.log("Some error happened while checking thumbnail...");
+                    }
+                }
+                // Push the file object to the array
                 output.push({
                     name: file,
                     path: `/files/${file}`,
