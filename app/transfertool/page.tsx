@@ -3,6 +3,8 @@ import Image from "next/image";
 import { useEffect, useState } from "react";
 import { fetchServerFiles } from "../actions/fetch-files.ts";
 import { uploadUserFiles } from "../actions/upload-files.ts";
+import { downloadFiles } from "../actions/download-files.ts";
+import { DeleteFiles } from "../actions/delete-files.ts";
 
 interface MediaBayProp {
     files: File[];
@@ -20,15 +22,17 @@ interface MediaControlProp {
 
 interface FileControlProp {
     getFiles: () => Promise<File>[];
+    selection: File[];
 }
 
 interface File {
     name: string;
     path: string;
     thumbnail?: string;
+    video?: boolean;
 }
 
-function FileControl({ getFiles }: FileControlProp) {
+function FileControl({ getFiles, selection }: FileControlProp) {
     async function handleUpload(event) {
         // Validate files array
         const files = event.target.files;
@@ -54,6 +58,27 @@ function FileControl({ getFiles }: FileControlProp) {
         }
     }
 
+    async function handleDownload() {
+        try {
+            const result = await downloadFiles(selection);
+            const binary = atob(result.buffer);
+            const bytes = new Uint8Array(binary.length);
+            for (let i = 0; i < binary.length; i++) {
+                bytes[i] = binary.charCodeAt(i);
+            }
+            const blob = new Blob([bytes.buffer], { type: result.contentType });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = result.filename;
+            a.click();
+            window.URL.revokeObjectURL(url);
+        } catch (error) {
+            console.error("Download failed:", error);
+            alert("Download failed.");
+        }
+    }
+
     return (
         <div className="fixed z-20 flex gap-5 my-10 bottom-0 left-1/2 -translate-x-1/2 -translate-y-1/2">
             <input
@@ -69,14 +94,15 @@ function FileControl({ getFiles }: FileControlProp) {
                 className="border border-border rounded-md bg-secondary px-5 py-2 drop-shadow-[0_8px_8px_rgba(0,0,0,.5)]
             hover:brightness-125 active:brightness-80 select-none text-white"
             >
-            Upload
+                Upload
             </label>
-            <div
+            <label
                 className="border border-border rounded-md bg-secondary px-5 py-2 drop-shadow-[0_8px_8px_rgba(0,0,0,.5)]
-                hover:brightness-125 active:brightness-80"
+                hover:brightness-125 active:brightness-80 select-none text-white"
+                onClick={handleDownload}
             >
-                <label className="select-none text-white">Download</label>
-            </div>
+                Download
+            </label>
         </div>
     );
 }
@@ -126,13 +152,31 @@ function MediaBay({ files, selection, setSelection }: MediaBayProp) {
                             </div>
                         </span>
                         <Image
-                            className="object-cover"
-                            src= {file.thumbnail? file.thumbnail + ".jpg" : file.path}
+                            className={`object-cover ${file.thumbnail? "hover:opacity-0 opacity-100" : ""}`}
+                            src={
+                                file.thumbnail
+                                    ? file.thumbnail + ".jpg"
+                                    : file.path
+                            }
                             alt={file.name}
                             sizes="(max-width: 500px; max-height: 500px)"
                             fill
                             draggable="false"
                         />
+                        {file.video?
+                            <Image
+                                className="object-cover hover:opacity-100 opacity-0"
+                                src={
+                                    file.thumbnail
+                                        ? file.thumbnail + ".gif"
+                                        : file.path
+                                }
+                                alt={file.name}
+                                sizes="(max-width: 500px; max-height: 500px)"
+                                fill
+                                draggable="false"
+                            />
+                        : "" }
                     </div>
                 );
             })}
@@ -148,9 +192,11 @@ function MediaControl({
 }: MediaControlProp) {
     const amount = selection.length;
 
-    const handleDelete = () => {
+    async function handleDelete(): Promise<void> {
+        DeleteFiles(selection);
+        setSelection([]);
         getFiles();
-    }
+    };
 
     return (
         <div className="flex justify-between mb-3">
@@ -216,7 +262,7 @@ export default function TransferTool() {
                 selection={selectedFiles}
                 setSelection={setSelectedFiles}
             />
-            <FileControl getFiles={getFiles} />
+            <FileControl getFiles={getFiles} selection={selectedFiles} />
         </div>
     );
 }

@@ -18,6 +18,7 @@ export async function uploadUserFiles(formData: FormData): Promise<Boolean> {
     const uploadDirectory = path.join(process.cwd(), "public/files");
     await ensureDir(uploadDirectory);
     const files = formData.getAll("files");
+    let success = false
 
     // Loop over each file and download them
     for (const fileEntry of files) {
@@ -48,11 +49,11 @@ export async function uploadUserFiles(formData: FormData): Promise<Boolean> {
                 });
 
                 console.log(`${filePath} successfully saved.`);
-                return true;
+                success = true;
             } catch (error) {
                 console.error(`${filePath} couldn't be saved.`, error);
             }
         }
     }
-    return false;
+    return success;
 }

@@ -3,11 +3,13 @@ import path from "path";
 import { readdir, mkdir } from "fs/promises";
 import ffmpeg from "fluent-ffmpeg"
 import ffmpegPath from "ffmpeg-static";
+import fs from "fs/promises";
 
 interface File {
     name: string;
     path: string;
     thumbnail?: string;
+    video?: boolean;
 }
 
 // Video extensions that need thumbnails
@@ -30,6 +32,19 @@ export async function generateThumbnail(filePath, thumbnailPath) {
           filename: fileName + ".jpg", // Extract filename from full path
           folder: path.dirname(thumbnailPath), // Extract directory from full path
         });
+    });
+
+    // Generate GIF thumbnail
+    await new Promise((resolve, reject) => {
+      ffmpeg(filePath)
+        .on('end', resolve)
+        .on('error', reject)
+        .setStartTime('00:00:00')
+        .setDuration(3)
+        .size('320x?')
+        .output(`${path.dirname(thumbnailPath)}/${fileName}.gif`)
+        .format('gif')
+        .run();
     });
 
     return { success: true, thumbnailPath };
@@ -89,6 +104,7 @@ export async function fetchServerFiles() {
                     name: file,
                     path: `/files/${file}`,
                     thumbnail: `/files/thumbnails/${path.basename(thumbnail)}`,
+                    video: true,
                 });
             }
         }
