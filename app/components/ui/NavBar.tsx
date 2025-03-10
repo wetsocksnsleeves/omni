@@ -69,12 +69,12 @@ export default function NavBar() {
                 </button>
             </div>
             <nav
-                className={`${burger ? "p-5 bg-primary flex flex-col w-full h-full justify-start items-start gap-5" : "hidden"}`} >
+                className={`${burger ? "p-3 bg-primary flex flex-col w-full h-full justify-start items-start" : "hidden"}`} >
                 {routes.map((item) => (
                     <Link
                         href={`${item.route}`}
                         key={item.route}
-                        className="hover:glow transition-all"
+                        className="hover:glow transition-all w-full py-3"
                     >
                         <span
                             className={`${routeName == item.route ? "italic font-bold" : ""}`}

@@ -167,7 +167,7 @@ function MediaBay({ files, selection, setSelection }: MediaBayProp) {
                             </div>
                         </span>
                         <Image
-                            className={`object-cover ${file.thumbnail ? "hover:opacity-0 opacity-100" : ""}`}
+                            className={`object-cover ${file.thumbnail ? "group-hover:opacity-0 group-active:opacity-100 opacity-100" : ""}`}
                             src={
                                 file.thumbnail
                                     ? file.thumbnail + ".jpg"
@@ -180,7 +180,7 @@ function MediaBay({ files, selection, setSelection }: MediaBayProp) {
                         />
                         {file.video ? (
                             <Image
-                                className="object-cover hover:opacity-100 opacity-0"
+                                className="object-cover group-hover:opacity-100 group-active:opacity-100 opacity-0"
                                 src={
                                     file.thumbnail
                                         ? file.thumbnail + ".gif"
