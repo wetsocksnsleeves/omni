@@ -1,7 +1,8 @@
 "use client";
 import Image from "next/image";
 import { useEffect, useState } from "react";
-import { fetchServerFiles } from "../actions";
+import { fetchServerFiles } from "../actions/fetch-files.ts";
+import { uploadUserFiles } from "../actions/upload-files.ts";
 
 interface MediaBayProp {
     files: File[];
@@ -28,15 +29,48 @@ interface File {
 }
 
 function FileControl({ getFiles }: FileControlProp) {
+    async function handleUpload(event) {
+        // Validate files array
+        const files = event.target.files;
+        if (!files || files.length <= 0) return;
+
+        // Package the files to send to server
+        const formData = new FormData();
+        for (let i = 0; i < files.length; i++) {
+            formData.append("files", files[i]);
+        }
+
+        // Send it to the server
+        try {
+            const success = await uploadUserFiles(formData);
+            if (success) {
+                console.log("File upload success.");
+                getFiles();
+            } else {
+                console.error("File upload failed.");
+            }
+        } catch (error) {
+            return;
+        }
+    }
+
     return (
         <div className="fixed z-20 flex gap-5 my-10 bottom-0 left-1/2 -translate-x-1/2 -translate-y-1/2">
-            <div
+            <input
+                id="media-upload"
+                type="file"
+                accept="image/*,video/*"
+                multiple
+                className="sr-only"
+                onChange={handleUpload}
+            />
+            <label
+                htmlFor="media-upload"
                 className="border border-border rounded-md bg-secondary px-5 py-2 drop-shadow-[0_8px_8px_rgba(0,0,0,.5)]
-            hover:brightness-125 active:brightness-80"
-                onClick={() => getFiles()}
+            hover:brightness-125 active:brightness-80 select-none text-white"
             >
-                <label className="select-none text-white">Upload</label>
-            </div>
+            Upload
+            </label>
             <div
                 className="border border-border rounded-md bg-secondary px-5 py-2 drop-shadow-[0_8px_8px_rgba(0,0,0,.5)]
                 hover:brightness-125 active:brightness-80"
@@ -93,8 +127,9 @@ function MediaBay({ files, selection, setSelection }: MediaBayProp) {
                         </span>
                         <Image
                             className="object-cover"
-                            src={file.path}
+                            src= {file.thumbnail? file.thumbnail + ".jpg" : file.path}
                             alt={file.name}
+                            sizes="(max-width: 500px; max-height: 500px)"
                             fill
                             draggable="false"
                         />
@@ -112,6 +147,10 @@ function MediaControl({
     getFiles,
 }: MediaControlProp) {
     const amount = selection.length;
+
+    const handleDelete = () => {
+        getFiles();
+    }
 
     return (
         <div className="flex justify-between mb-3">
@@ -133,7 +172,7 @@ function MediaControl({
             <button
                 className={`text-sm md:text-base px-5 py-2 bg-red-600 rounded-md
                         ${amount > 0 ? "cursor-pointer active:brightness-90 hover:brightness-125" : "brightness-50 cursor-not-allowed"}`}
-                onClick={getFiles}
+                onClick={() => handleDelete()}
             >
                 <span className="text-white">Delete ({amount})</span>
             </button>
@@ -145,8 +184,8 @@ export default function TransferTool() {
     const [files, setFiles] = useState([]);
 
     // Fetch server storage
-        // This is passed to child components and they don't need to call it within
-        // useEffect as this function is being called via onClick handlers
+    // This is passed to child components and they don't need to call it within
+    // useEffect as this function is being called via onClick handlers
     async function getFiles() {
         try {
             const fetchedFiles: File[] = await fetchServerFiles();
@@ -158,10 +197,9 @@ export default function TransferTool() {
 
     // useEffect hook to escape from client side environment
     useEffect(() => {
+        // Initial file fetch upload load
         getFiles();
     }, []);
-
-    console.log(files);
 
     const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
 

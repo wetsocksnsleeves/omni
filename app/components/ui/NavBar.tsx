@@ -69,8 +69,7 @@ export default function NavBar() {
                 </button>
             </div>
             <nav
-                className={`${burger ? "p-5 bg-primary flex flex-col w-full h-full justify-start items-start gap-5" : "hidden"}`}
-            >
+                className={`${burger ? "p-5 bg-primary flex flex-col w-full h-full justify-start items-start gap-5" : "hidden"}`} >
                 {routes.map((item) => (
                     <Link
                         href={`${item.route}`}
