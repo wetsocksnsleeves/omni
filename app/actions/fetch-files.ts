@@ -1,7 +1,7 @@
 "use server";
 import path from "path";
 import { readdir, mkdir } from "fs/promises";
-import ffmpeg from "fluent-ffmpeg"
+import ffmpeg from "fluent-ffmpeg";
 import ffmpegPath from "ffmpeg-static";
 import fs from "fs/promises";
 
@@ -17,48 +17,53 @@ const VIDEO_EXTENSIONS = new Set([".mp4", ".webm", ".mov", ".avi", ".mkv"]);
 
 // Generate a .jpg and a .gif
 export async function generateThumbnail(filePath, thumbnailPath) {
-  ffmpeg.setFfmpegPath(ffmpegPath);
+    ffmpeg.setFfmpegPath(ffmpegPath);
 
-  const fileName = path.basename(thumbnailPath);
+    const fileName = path.basename(thumbnailPath);
 
-  try {
-    await new Promise((resolve, reject) => {
-      ffmpeg(filePath)
-        .on('end', resolve)
-        .on('error', reject)
-        .screenshots({
-          count: 1,
-          timestamps: [0],
-          filename: fileName + ".jpg", // Extract filename from full path
-          folder: path.dirname(thumbnailPath), // Extract directory from full path
+    try {
+        await new Promise((resolve, reject) => {
+            ffmpeg(filePath)
+                .inputOption("-vsync 0") // Different option that helps with MOV files
+                .on("end", resolve)
+                .on("error", (err) => {
+                    console.error("Error generating thumbnail:", err);
+                    reject(err);
+                })
+                .screenshots({
+                    count: 1,
+                    timestamps: [0.5], // Use 0.5 seconds instead of 0
+                    filename: fileName + ".jpg",
+                    folder: path.dirname(thumbnailPath),
+                });
         });
-    });
 
-    // Generate GIF thumbnail
-    await new Promise((resolve, reject) => {
-      ffmpeg(filePath)
-        .on('end', resolve)
-        .on('error', reject)
-        .setStartTime('00:00:00')
-        .setDuration(3)
-        .size('320x?')
-        .output(`${path.dirname(thumbnailPath)}/${fileName}.gif`)
-        .format('gif')
-        .run();
-    });
+        // Generate GIF thumbnail
+        await new Promise((resolve, reject) => {
+            ffmpeg(filePath)
+                .on("end", resolve)
+                .on("error", reject)
+                .setStartTime("00:00:00")
+                .setDuration(3)
+                .size("320x?")
+                .output(`${path.dirname(thumbnailPath)}/${fileName}.gif`)
+                .format("gif")
+                .run();
+        });
 
-    return { success: true, thumbnailPath };
-  } catch (error) {
-    console.error('Thumbnail generation failed:', error);
-    return { success: false, error: 'Thumbnail generation failed' };
-
-  }
+        return { success: true, thumbnailPath };
+    } catch (error) {
+        console.error("Thumbnail generation failed:", error);
+        return { success: false, error: "Thumbnail generation failed" };
+    }
 }
 
 // Checks a given file name and returns a thumbnail or false
 function isVideo(filePath: string): string {
     const fileName = path.basename(filePath);
-    const extension = fileName.substring(fileName.lastIndexOf("."));
+    const extension = fileName
+        .toLowerCase()
+        .substring(fileName.lastIndexOf("."));
     const thumbnailPath =
         process.cwd() +
         "/public/files/thumbnails/" +

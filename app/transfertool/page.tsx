@@ -189,6 +189,7 @@ function MediaBay({ files, selection, setSelection }: MediaBayProp) {
                                 alt={file.name}
                                 sizes="(max-width: 500px; max-height: 500px)"
                                 fill
+                                unoptimized
                                 draggable="false"
                             />
                         ) : (
