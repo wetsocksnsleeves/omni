@@ -6,7 +6,7 @@ export default function Loading({text = "Loading..."}: loadingProps) {
     return (
         <div className="fixed inset-0 flex items-center justify-center z-30">
             <div
-                className="drop-shadow-lg flex flex-col items-center outline outline-1 outline-accent_one bg-primary p-4 py-8 rounded-lg 
+                className="drop-shadow-lg flex flex-col items-center outline outline-1 outline-border bg-primary p-4 py-8 rounded-lg 
                 w-1/2 md:w-1/4 max-w-xs max-h-xs"
             >
                 <div
