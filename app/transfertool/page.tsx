@@ -5,6 +5,7 @@ import { fetchServerFiles } from "../actions/fetch-files.ts";
 import { uploadUserFiles } from "../actions/upload-files.ts";
 import { downloadFiles } from "../actions/download-files.ts";
 import { DeleteFiles } from "../actions/delete-files.ts";
+import Loading from "../components/ui/LoadingToast.tsx";
 
 interface MediaBayProp {
     files: File[];
@@ -23,6 +24,8 @@ interface MediaControlProp {
 interface FileControlProp {
     getFiles: () => Promise<File>[];
     selection: File[];
+    setSelection: (newSelection: File[]) => void;
+    setLoading: (loading: LoadingToast) => void;
 }
 
 interface File {
@@ -32,12 +35,18 @@ interface File {
     video?: boolean;
 }
 
-function FileControl({ getFiles, selection }: FileControlProp) {
+interface LoadingToast {
+    text: string;
+    state: boolean;
+}
+
+function FileControl({ getFiles, selection, setSelection, setLoading }: FileControlProp) {
     async function handleUpload(event) {
         // Validate files array
         const files = event.target.files;
         if (!files || files.length <= 0) return;
 
+        setLoading({ text: "Uploading...", state: true});
         // Package the files to send to server
         const formData = new FormData();
         for (let i = 0; i < files.length; i++) {
@@ -55,11 +64,14 @@ function FileControl({ getFiles, selection }: FileControlProp) {
             }
         } catch (error) {
             return;
+        } finally {
+            setLoading({ text: "", state: false });
         }
     }
 
     async function handleDownload() {
         try {
+            setLoading({ text: "Downloading...", state: true});
             const result = await downloadFiles(selection);
             const binary = atob(result.buffer);
             const bytes = new Uint8Array(binary.length);
@@ -76,6 +88,9 @@ function FileControl({ getFiles, selection }: FileControlProp) {
         } catch (error) {
             console.error("Download failed:", error);
             alert("Download failed.");
+        } finally {
+            setSelection([])
+            setLoading({ text: "", state: false});
         }
     }
 
@@ -152,7 +167,7 @@ function MediaBay({ files, selection, setSelection }: MediaBayProp) {
                             </div>
                         </span>
                         <Image
-                            className={`object-cover ${file.thumbnail? "hover:opacity-0 opacity-100" : ""}`}
+                            className={`object-cover ${file.thumbnail ? "hover:opacity-0 opacity-100" : ""}`}
                             src={
                                 file.thumbnail
                                     ? file.thumbnail + ".jpg"
@@ -163,7 +178,7 @@ function MediaBay({ files, selection, setSelection }: MediaBayProp) {
                             fill
                             draggable="false"
                         />
-                        {file.video?
+                        {file.video ? (
                             <Image
                                 className="object-cover hover:opacity-100 opacity-0"
                                 src={
@@ -176,7 +191,9 @@ function MediaBay({ files, selection, setSelection }: MediaBayProp) {
                                 fill
                                 draggable="false"
                             />
-                        : "" }
+                        ) : (
+                            ""
+                        )}
                     </div>
                 );
             })}
@@ -196,7 +213,7 @@ function MediaControl({
         DeleteFiles(selection);
         setSelection([]);
         getFiles();
-    };
+    }
 
     return (
         <div className="flex justify-between mb-3">
@@ -228,6 +245,11 @@ function MediaControl({
 
 export default function TransferTool() {
     const [files, setFiles] = useState([]);
+    const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+    const [loading, setLoading] = useState<LoadingToast>({
+        text: "Loading...",
+        state: false,
+    });
 
     // Fetch server storage
     // This is passed to child components and they don't need to call it within
@@ -243,14 +265,13 @@ export default function TransferTool() {
 
     // useEffect hook to escape from client side environment
     useEffect(() => {
-        // Initial file fetch upload load
+        // Initial file fetch upon load
         getFiles();
     }, []);
 
-    const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
-
     return (
         <div className="p-3 w-full">
+            {loading.state ? <Loading text={loading.text} /> : ""}
             <MediaControl
                 files={files}
                 selection={selectedFiles}
@@ -262,7 +283,12 @@ export default function TransferTool() {
                 selection={selectedFiles}
                 setSelection={setSelectedFiles}
             />
-            <FileControl getFiles={getFiles} selection={selectedFiles} />
+            <FileControl
+                getFiles={getFiles}
+                selection={selectedFiles}
+                setSelection={setSelectedFiles}
+                setLoading={setLoading}
+            />
         </div>
     );
 }
