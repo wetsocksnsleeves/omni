@@ -4,6 +4,7 @@ import { readdir, mkdir } from "fs/promises";
 import ffmpeg from "fluent-ffmpeg";
 import ffmpegPath from "ffmpeg-static";
 import fs from "fs/promises";
+import { existsSync } from "fs";
 
 interface File {
     name: string;
@@ -104,19 +105,19 @@ export async function fetchServerFiles() {
             if (thumbnail === "") {
                 output.push({ name: file, path: `/files/${file}` });
             } else {
-                try {
-                    fs.access(thumbnail + ".jpg", fs.constants.F_OK);
-                } catch (error) {
-                    if (error.code === "ENOENT") {
-                        console.log("Thumbnail not found. Generating...");
+                // Conditional Thumbnail Generation
+                if (!existsSync(thumbnail + ".jpg")) {
+                    console.log("Thumbnail not found. Generating...");
+                    try {
                         await generateThumbnail(
                             filesDirectory + "/" + file,
                             thumbnail,
                         );
-                    } else {
-                        console.log("Some error happened while checking thumbnail...");
+                    } catch (err) {
+                        console.error("Error generating thumbnail:", err);
                     }
                 }
+
                 // Push the file object to the array
                 output.push({
                     name: file,
