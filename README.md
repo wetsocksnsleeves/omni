@@ -12,7 +12,7 @@ yarn dev
 - 📼 Media downlaoder
 
 ## Roadmap
-[x] - File transfer
-[] - Color palette manager 
-[] - Gif generator
-[] - Media downloader
+- [x] File transfer
+- [] Color palette manager 
+- [] Gif generator
+- [] Media downloader
