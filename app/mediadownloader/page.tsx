@@ -19,8 +19,8 @@ function MediaControl() {
                     placeholder="Enter video URL..."
                 />
                 <button
-                    className="p-3 h-12 bg-white rounded-r-lg text-black font-medium 
-                    hover:bg-secondary hover:border hover:border-white hover:text-white active:bg-white active:text-black transition-all"
+                    className="p-3 h-12 border border-white bg-white rounded-r-lg text-black font-medium 
+                    hover:bg-secondary hover:text-white active:bg-white active:text-black transition-all"
                 >
                     <label>Download</label>
                 </button>
